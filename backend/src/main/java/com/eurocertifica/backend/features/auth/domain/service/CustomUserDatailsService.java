@@ -13,9 +13,10 @@ import com.eurocertifica.backend.features.auth.infrastructure.persistence.entity
 
 @Service
 public class CustomUserDatailsService implements UserDetailsService {
-    private UserRepository userRepository;
 
-    public void CustomUserDetailsService(UserRepository userRepository) {
+    private final UserRepository userRepository;
+
+    public CustomUserDatailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
@@ -27,8 +28,7 @@ public class CustomUserDatailsService implements UserDetailsService {
         return new org.springframework.security.core.userdetails.User(
                 user.getEmail(),
                 user.getPassword(),
-                Collections.singletonList(new SimpleGrantedAuthority(user.getProfile().getDescription()))
+                Collections.singletonList(new SimpleGrantedAuthority("ROLE_" + user.getProfile().getDescription()))
         );
     }
-    
 }

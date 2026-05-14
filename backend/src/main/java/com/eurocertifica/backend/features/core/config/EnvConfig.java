@@ -9,8 +9,9 @@ public class EnvConfig {
     static {
         Dotenv dotenv = Dotenv.configure()
             .ignoreIfMissing()
+            .directory("../")
             .load();
-        dotenv.entries().forEach(entry -> 
+        dotenv.entries().forEach(entry ->
             System.setProperty(entry.getKey(), entry.getValue())
         );
     }

@@ -1,0 +1,51 @@
+version: "3.9"
+
+services:
+  oracle-db:
+    image: gvenzl/oracle-xe:21-slim
+    container_name: eurocertifica-oracle
+    environment:
+      ORACLE_PASSWORD: "${ORACLE_PASSWORD:-Oracle123}"
+      ORACLE_DATABASE: "${ORACLE_DATABASE:-XE}"
+      ORACLE_CHARACTERSET: AL32UTF8
+      ORACLE_ALLOW_REMOTE: "true"
+    ports:
+      - "1521:1521"
+      - "5500:5500"
+    volumes:
+      - oracle-data:/opt/oracle/oradata
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: eurocertifica-backend
+    depends_on:
+      - oracle-db
+    environment:
+      SUA_URL_ORACLE: "jdbc:oracle:thin:@//oracle-db:1521/${ORACLE_DATABASE:-XE}"
+      SEU_USUARIO_ORACLE: "${ORACLE_USER:-system}"
+      SUA_SENHA_ORACLE: "${ORACLE_PASSWORD:-Oracle123}"
+      JWT_SECRET_KEY: "${JWT_SECRET_KEY:-ChangeThisSecret}"
+      JWT_EXPIRATION_MS: "${JWT_EXPIRATION_MS:-3600000}"
+    ports:
+      - "8080:8080"
+    command:
+      [
+        "bash",
+        "-lc",
+        "until bash -c 'echo > /dev/tcp/oracle-db/1521' 2>/dev/null; do echo waiting for oracle; sleep 5; done; java -jar /app/app.jar",
+      ]
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: eurocertifica-frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  oracle-data:
